@@ -70,8 +70,8 @@ io.on('connection', (socket) => {
     }
     const handleCurrentCardPlayed = (card?: Card, hidden?: boolean) => {
         if (hidden) {
-            socket.emit('current_card_played', card);
             socket.broadcast.emit('current_card_played', undefined);
+            socket.emit('current_card_played', card);
         } else {
             io.emit('current_card_played', card);
         }
@@ -120,10 +120,10 @@ io.on('connection', (socket) => {
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id && !state.hasPlayed) {
                 const card = state.takeCardFromDeck();
+                handleCurrentCardPlayed(card, true);
                 sendCurrentHand();
                 sendOthersPlayersHandCount();
                 broadcastCurrentPlayer();
-                handleCurrentCardPlayed(card, true);
                 if (state.deck.length === 0) {
                     io.emit('deck_empty');
                 }

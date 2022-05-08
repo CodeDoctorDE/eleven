@@ -18,7 +18,7 @@ export default function HandView({ }: Props) {
     return (
         <div>
             <p>Your hand</p>
-            <ul>{hand?.map((value, index) => <li style={{ color: getColor(value.color), fontWeight: context.currentCardPlayed === value ? 'bold' : 'normal' }} key={`${value.color}-${value.number}`} onClick={() => play(index, value)}>{value.number}</li>)}</ul>
+            <ul>{hand?.map((value, index) => <li style={{ color: getColor(value.color), fontWeight: (context.currentCardPlayed?.number === value.number && context.currentCardPlayed?.color === value.color) ? 'bold' : 'normal' }} key={`${value.color}-${value.number}`} onClick={() => play(index, value)}>{value.number}</li>)}</ul>
             <Button onClick={() => context.takeCard()}>Take card {context.deckEmpty}</Button>
             <Button onClick={() => context.endTurn()}>End turn</Button>
             {/* <Button onClick={() => context.removeLastCard()}>Remove last card (CHEAT)</Button> */}

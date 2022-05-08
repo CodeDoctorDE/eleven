@@ -149,6 +149,12 @@ export class GameStatePlaying extends GameState {
         if (this.getHand()?.cards?.length === 0) {
             this.win(this.currentPlayer);
         }
+        if (this.manager.players.length === 1) {
+            this.win(this.manager.players[1]);
+        }
+        if (this.manager.players.length === 0) {
+            this.win(null);
+        }
     }
     public getCards() {
         const hand = this.getHand();
