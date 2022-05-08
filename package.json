@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "build:shared": "cd shared && yarn build",
-    "build:client":"yarn build:shared && cd client && yarn build",
-    "build:server":"yarn build:shared && cd server && yarn build"
+    "build:client": "yarn build:shared && cd client && yarn build",
+    "build:server": "yarn build:shared && cd server && yarn build"
   },
   "devDependencies": {
     "typescript": "^4.6.4"
