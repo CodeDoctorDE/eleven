@@ -10,7 +10,7 @@ import PlayingPage from './views/playing';
 import FinishedPage from './views/finished';
 import socket from './services/socket';
 
-const endpoint = import.meta.env.API_ENDPOINT ?? 'localhost:3001';
+const endpoint = import.meta.env.API_ENDPOINT ??'eleven-backend.linwood.dev';
 
 function App() {
   const [gameState, setGameState] = useState<StateNames | undefined>();
@@ -20,6 +20,7 @@ function App() {
   const [winner, setWinner] = useState<string | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();
   const [playersHandCount, setPlayersHandCount] = useState<{ [key: string]: number }>({});
+  const [currentCardPlayed, setCurrentCardPlayed] = useState<Card | undefined>();
   const connect = async () => {
     console.log(`connecting to ${endpoint}`);
     const connected = socketService.connect(endpoint);
@@ -50,15 +51,18 @@ function App() {
       console.log('current player changed', data);
       setCurrentPlayer(data);
     });
-    socketService.socket?.on('disconnect', () => {
-      console.log('disconnected');
-      setGameState(undefined);
-    });
     socketService.socket?.on('players_hand_count_changed', (data) => {
       console.log('players hand count changed', data);
       setPlayersHandCount(data);
     });
-
+    socketService.socket?.on('current_card_played', (data) => {
+      console.log('current card played', data);
+      setCurrentCardPlayed(data);
+    });
+    socketService.socket?.on('disconnect', () => {
+      console.log('disconnected');
+      setGameState(undefined);
+    });
     console.log(`connected: ${await connected}`);
   }
   useEffect(() => {
@@ -74,6 +78,7 @@ function App() {
     winner,
     currentPlayer,
     playersHandCount,
+    currentCardPlayed,
     me: socketService?.socket?.id,
     canPlay: async (card: Card) => {
       if (socketService.socket)

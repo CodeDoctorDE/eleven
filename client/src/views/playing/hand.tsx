@@ -2,9 +2,9 @@ import React, { useContext } from 'react'
 import gameContext from '../../context'
 import { Card } from '../../../../shared';
 import { Button } from '@mantine/core';
+import { getColor } from '../../asset';
 
 type Props = {}
-const colors = {'red': '#a40038', 'yellow': '#df892e', 'green': '#4e7026', 'blue': '#09177e'};
 export default function HandView({ }: Props) {
     const context = useContext(gameContext)
     const play = async (index: number, card: Card) => {
@@ -18,7 +18,7 @@ export default function HandView({ }: Props) {
     return (
         <div>
             <p>Your hand</p>
-            <ul>{hand?.map((value, index) => <li style={{color: colors[value.color]}} key={`${value.color}-${value.number}`} onClick={() => play(index, value)}>{value.number}</li>)}</ul>
+            <ul>{hand?.map((value, index) => <li style={{ color: getColor(value.color), fontWeight: context.currentCardPlayed === value ? 'bold' : 'normal' }} key={`${value.color}-${value.number}`} onClick={() => play(index, value)}>{value.number}</li>)}</ul>
             <Button onClick={() => context.takeCard()}>Take card {context.deckEmpty}</Button>
             <Button onClick={() => context.endTurn()}>End turn</Button>
             {/* <Button onClick={() => context.removeLastCard()}>Remove last card (CHEAT)</Button> */}

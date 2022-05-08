@@ -174,6 +174,7 @@ export class GameStatePlaying extends GameState {
                 collection.sort((a, b) => a - b);
                 this.hasPlayed = true;
                 this.removeCard(card);
+                this.testWin();
                 return true;
             }
         }
@@ -187,7 +188,7 @@ export class GameStatePlaying extends GameState {
         }
         return false;
     }
-    public takeCardFromDeck() {
+    public takeCardFromDeck() : Card | undefined {
         if (!this.hasPlayed) {
             const card = this.deck.pop();
             if (card) {
@@ -196,9 +197,9 @@ export class GameStatePlaying extends GameState {
                 this.hasPlayed = true;
             }
             this.endTurn();
-            return true;
+            return card;
         }
-        return false;
+        return null;
     }
     private win(winner: string | null) {
         this.manager.gameState = new GameStateEnded(winner, this.manager);

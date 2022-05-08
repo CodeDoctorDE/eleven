@@ -10,6 +10,7 @@ export interface IGameContextProps {
     winner: string | undefined;
     // Key is player name, value is player hand count
     playersHandCount: { [key: string]: number };
+    currentCardPlayed: Card | undefined;
     canPlay(card: Card): Promise<boolean>;
     playCard(cardIndex: number): void;
     endTurn(): void;
@@ -28,6 +29,7 @@ const defaultState: IGameContextProps = {
     currentPlayer: undefined,
     me: undefined,
     playersHandCount: {},
+    currentCardPlayed: undefined,
     canPlay: () => Promise.resolve(false),
     playCard: () => { },
     endTurn: () => { },

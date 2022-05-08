@@ -3,7 +3,7 @@ const app = express();
 import http from 'http';
 const server = http.createServer(app);
 import { Server } from "socket.io";
-import { GameStateManager, GameStateWaiting, GameStatePlaying,GameStateEnded } from '../../shared';
+import { Card, GameStateManager, GameStateWaiting, GameStatePlaying, GameStateEnded } from '../../shared';
 const io = new Server(server, {
     cors: {
         origin: '*',
@@ -68,6 +68,14 @@ io.on('connection', (socket) => {
             }
         }
     }
+    const handleCurrentCardPlayed = (card?: Card, hidden?: boolean) => {
+        if (hidden) {
+            socket.emit('current_card_played', card);
+            socket.broadcast.emit('current_card_played', undefined);
+        } else {
+            io.emit('current_card_played', card);
+        }
+    }
     const state = gameStateManager.gameState;
     console.log(state);
     console.log(state instanceof GameStateWaiting);
@@ -111,10 +119,11 @@ io.on('connection', (socket) => {
         const state = gameStateManager.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id && !state.hasPlayed) {
-                state.takeCardFromDeck();
+                const card = state.takeCardFromDeck();
                 sendCurrentHand();
                 sendOthersPlayersHandCount();
                 broadcastCurrentPlayer();
+                handleCurrentCardPlayed(card, true);
                 if (state.deck.length === 0) {
                     io.emit('deck_empty');
                 }
@@ -150,6 +159,8 @@ io.on('connection', (socket) => {
                     if (card) {
                         state.playCard(card);
                         broadcastCollectionChanged();
+                        handleCurrentCardPlayed(card, false);
+                        sendOthersPlayersHandCount();
                         sendCurrentHand();
                         broadcastGameState();
                     }
