@@ -80,7 +80,7 @@ export class GameStatePlaying extends GameState {
         this.deck = availableCards;
         this.hands = [];
         for (const player of this.manager.players) {
-            this.hands.push(new PlayerHand(player, this.deck.splice(0, 10)));
+            this.hands.push(new PlayerHand(player, this.deck.splice(0, 5)));
             this.sortHand(player);
         }
         // If red 11 is in the deck, remove it and add it to the collection
