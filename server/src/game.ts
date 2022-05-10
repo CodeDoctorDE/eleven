@@ -1,4 +1,4 @@
-import { Card, CardCollection, CardColor, getAllCards } from './card';
+import { Card, CardCollection, CardColor, getAllCards } from '@eleven/shared';
 
 export type StateNames = 'waiting' | 'playing' | 'end';
 export abstract class GameState {
@@ -9,17 +9,33 @@ export abstract class GameState {
 export class PlayerHand {
     constructor(public player: string, public cards: Card[]) { }
 }
+export class Player {
+    constructor(public socketId: string, public name: string) { }
+}
 export class GameStateManager {
     gameState: GameState;
-    public players: string[] = [];
+    public players: Player[] = [];
+
+    public get sockets() {
+        return this.players.map(p => p.socketId);
+    }
 
     constructor() {
         this.gameState = new GameStateWaiting(this);
     }
 
-    public join(player: string): boolean {
+    public getName(socketId: string): string | undefined {
+        return this.players.find(p => p.socketId === socketId)?.name;
+    }
+
+    public getSocket(name: string): string | undefined {
+        return this.players.find(p => p.name === name)?.socketId;
+    }
+
+
+    public join(socketId: string, name: string): boolean {
         if (this.gameState instanceof GameStateWaiting) {
-            this.gameState.join(player);
+            this.gameState.join(socketId, name);
             return true;
         }
         return false;
@@ -31,7 +47,7 @@ export class GameStateManager {
     }
 
     public leave(player: string) {
-        const index = this.players.indexOf(player);
+        const index = this.players.findIndex(p => p.socketId === player);
         if (index > -1) {
             this.players.splice(index, 1);
         }
@@ -77,7 +93,7 @@ export class GameStatePlaying extends GameState {
         // Deal the deck
         this.deck = availableCards;
         this.hands = [];
-        for (const player of this.manager.players) {
+        for (const player of this.manager.sockets) {
             this.hands.push(new PlayerHand(player, this.deck.splice(0, 5)));
             this.sortHand(player);
         }
@@ -97,7 +113,7 @@ export class GameStatePlaying extends GameState {
         // If no player has the green 11, find the player with the blue 11
         firstPlayer ??= this.hands.find(h => h.cards.find(c => c.number === 11 && c.color === 'blue'))?.player;
         // If no player has the blue 11, select a random player
-        firstPlayer ??= this.manager.players[Math.floor(Math.random() * this.manager.players.length)];
+        firstPlayer ??= this.manager.sockets[Math.floor(Math.random() * this.manager.sockets.length)];
         this.currentPlayer = firstPlayer;
 
     }
@@ -148,7 +164,7 @@ export class GameStatePlaying extends GameState {
             this.win(this.currentPlayer);
         }
         if (this.manager.players.length === 1) {
-            this.win(this.manager.players[0]);
+            this.win(this.manager.sockets[0]);
         }
         if (this.manager.players.length === 0) {
             this.win(null);
@@ -187,12 +203,12 @@ export class GameStatePlaying extends GameState {
     public endTurn(force?: boolean) {
         if (this.hasPlayed || (this.deck.length === 0) || force) {
             this.hasPlayed = false;
-            this.currentPlayer = this.manager.players[(this.manager.players.indexOf(this.currentPlayer) + 1) % this.manager.players.length];
+            this.currentPlayer = this.manager.sockets[(this.manager.sockets.indexOf(this.currentPlayer) + 1) % this.manager.sockets.length];
             return true;
         }
         return false;
     }
-    public takeCardFromDeck() : Card | undefined {
+    public takeCardFromDeck(): Card | undefined {
         if (!this.hasPlayed) {
             const card = this.deck.pop();
             if (card) {
@@ -222,9 +238,9 @@ export class GameStateWaiting extends GameState {
         return 'waiting';
     }
 
-    public join(player: string) {
+    public join(socketId: string, name: string) {
         if (this.manager.gameState instanceof GameStateWaiting) {
-            this.manager.players.push(player);
+            this.manager.players.push(new Player(socketId, name));
         }
     }
 }

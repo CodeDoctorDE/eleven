@@ -1,4 +1,5 @@
 import { Button, Card, Container, createStyles, Divider, Group, TextInput, Title } from '@mantine/core'
+import { useLocalStorage } from '@mantine/hooks';
 import { useContext, useState } from 'react';
 import InfoButton from '../../components/info';
 import ThemeButton from '../../components/theme';
@@ -15,12 +16,14 @@ const useStyles = createStyles((theme) => ({
 export default function RoomView({ }: Props) {
     const { classes } = useStyles();
     const [room, setRoom] = useState('');
+    const [name, setName] = useLocalStorage({ key: 'name', defaultValue: 'Player#' + Math.floor(Math.random() * 10000) });
+
     const context = useContext(gameContext);
     const join = () => {
-        context.joinRoom(room);
+        context.joinRoom(room, name);
     }
     const create = () => {
-        context.createRoom();
+        context.createRoom(name);
     }
     return (
         <Container className={classes.root} size="xs">
@@ -30,7 +33,7 @@ export default function RoomView({ }: Props) {
                     <InfoButton />
                     <ThemeButton />
                 </Group>
-                <TextInput label="Name" mb={"md"} />
+                <TextInput label="Name" mb={"md"} value={name} onChange={(event) => setName(event.target.value)} />
                 <Group align="flex-end" spacing={"md"}>
                     <TextInput value={room} style={{ flex: 1 }} label="Room" onChange={(event) => setRoom(event.target.value)} />
                     <Button onClick={join}>Join</Button>

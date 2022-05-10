@@ -1,3 +1,4 @@
+import { Card, Table, Text } from '@mantine/core';
 import React, { useContext } from 'react'
 import gameContext from '../../context'
 
@@ -8,12 +9,27 @@ export default function PlayersView() {
         return <div>No players</div>
     }
     const players = Object.keys(context.playersHandCount);
-    return (
-        <>
-            <p>You are {context.me}</p>
-            {context.me === context.currentPlayer && <div>It is your turn</div>}
-            <p>Current player {context.currentPlayer}</p>
-            <ul>{players.map((value) => <li key={value}>{value} ({context.playersHandCount[value]})</li>)}</ul>
-        </>
-    )
+    const rows = players.map(player => {
+        const hand = context.playersHandCount[player];
+        return <tr key={player}>
+            <td><Text color={
+                player === context.currentPlayer ? 'cyan' : undefined
+            }>{player}</Text></td>
+            <td>{hand}</td>
+        </tr>
+    });
+    return (<Card>
+        <Text color={
+            context.currentPlayer === context.me ? 'cyan' : undefined
+        }>You are {context.me}</Text>
+        <Table striped>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Cards</th>
+                </tr>
+            </thead>
+            <tbody>{rows}</tbody>
+        </Table>
+    </Card>)
 }

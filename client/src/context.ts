@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, CardCollection, GameState, PlayerHand, StateNames } from '@eleven/shared';
+import { Card, CardCollection } from '@eleven/shared';
 
 export interface IGameContextProps {
     currentPlayer: string | undefined;
-    gameState: StateNames | undefined;
+    gameState: string | undefined;
     hand: Card[] | undefined;
     deckEmpty: boolean;
     collection: CardCollection | undefined;
@@ -20,8 +20,8 @@ export interface IGameContextProps {
     startGame(): void;
     me: string | undefined;
     removeLastCard(): void;
-    joinRoom(roomId: string): void;
-    createRoom(): void;
+    joinRoom(roomId: string, name: string): void;
+    createRoom(name: string): void;
     leaveRoom(): void;
 }
 

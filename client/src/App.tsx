@@ -5,7 +5,7 @@ import 'material-symbols/rounded.css';
 import socketService from './services/socket';
 import gameService from './services/game';
 import GameContext, { IGameContextProps } from './context';
-import { Card, CardCollection, PlayerHand, StateNames } from '@eleven/shared';
+import { Card, CardCollection } from '@eleven/shared';
 import WaitingPage from './views/waiting';
 import PlayingPage from './views/playing';
 import FinishedPage from './views/finished';
@@ -28,10 +28,11 @@ function App() {
 
   useHotkeys([['mod+J', () => toggleColorScheme()]]);
 
-  const [gameState, setGameState] = useState<StateNames | undefined>();
+  const [gameState, setGameState] = useState<string | undefined>();
   const [collection, setCollection] = useState<CardCollection | undefined>();
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [hand, setHand] = useState<Card[] | undefined>();
+  const [me, setMe] = useState<string>();
   const [winner, setWinner] = useState<string | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();
   const [players, setPlayers] = useState<string[]>([]);
@@ -106,7 +107,7 @@ function App() {
     currentCardPlayed,
     room,
     players,
-    me: socketService?.socket?.id,
+    me,
     canPlay: async (card: Card) => {
       if (socketService.socket)
         return gameService.canPlay(socketService.socket, card);
@@ -137,9 +138,11 @@ function App() {
         return gameService.removeLastCard(socketService.socket);
       return false;
     },
-    joinRoom: async (room: string) => {
-      if (socketService.socket)
-        return gameService.joinRoom(socketService.socket, room);
+    joinRoom: async (room: string, name: string) => {
+      if (socketService.socket) {
+        setMe(name);
+        return gameService.joinRoom(socketService.socket, room, name);
+      }
       return false;
     },
     leaveRoom: async () => {
@@ -148,9 +151,11 @@ function App() {
       setRoom(undefined);
       return false;
     },
-    createRoom: async () => {
-      if (socketService.socket)
-        return gameService.createRoom(socketService.socket);
+    createRoom: async (name: string) => {
+      if (socketService.socket) {
+        setMe(name);
+        return gameService.createRoom(socketService.socket, name);
+      }
       return false;
     }
   }

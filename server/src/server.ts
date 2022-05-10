@@ -1,9 +1,11 @@
+import { Card } from '@eleven/shared';
 import express from 'express';
 const app = express();
 import http from 'http';
 const server = http.createServer(app);
 import { Server } from "socket.io";
-import { Card, GameStateManager, GameStateWaiting, GameStatePlaying, GameStateEnded } from '@eleven/shared';
+import { GameStateEnded, GameStateManager, GameStatePlaying } from './game';
+
 const io = new Server(server, {
     cors: {
         origin: '*',
@@ -43,7 +45,8 @@ io.on('connection', (socket) => {
         io.emit('game_state_changed', game?.gameState.stateName);
         const state = game?.gameState;
         if (state instanceof GameStateEnded) {
-            io.emit('winner', state.winner);
+            const name = game.getName(socket.id);
+            io.emit('winner', name);
         }
     }
 
@@ -59,7 +62,8 @@ io.on('connection', (socket) => {
         const game = getGame();
         const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
-            io.emit('current_player_changed', state.currentPlayer);
+            const name = game.getName(state.currentPlayer);
+            io.emit('current_player_changed', name);
         }
     }
 
@@ -68,13 +72,14 @@ io.on('connection', (socket) => {
         const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             const players = game?.players;
-            players.forEach(socketId => {
-                const current = io.sockets.sockets.get(socketId);
-                const result = state.hands.filter(hand => hand.player !== socketId);
+            players.forEach(player => {
+                const current = io.sockets.sockets.get(player.socketId);
+                const result = state.hands.filter(hand => hand.player !== player.socketId);
                 // Key is the player's socket id, value is the number of cards in their hand
                 const playersHand: { [key: string]: number } = {};
                 result.forEach(hand => {
-                    playersHand[hand.player] = hand.cards.length;
+                    const name = game?.getName(hand.player);
+                    playersHand[name] = hand.cards.length;
                 });
                 current.emit('players_hand_count_changed', playersHand);
             });
@@ -111,23 +116,31 @@ io.on('connection', (socket) => {
         });
     }
     const broadcastPlayersUpdated = async (room: string) => {
-        const sockets = io.sockets.adapter.rooms.get(room);
-        io.to(room).emit('players_updated', Array.from(sockets.values()));
+        const names = games[room].players.map(player => player.name);
+        io.to(room).emit('players_updated', names);
     }
 
-    socket.on('join_room', (roomId: string) => {
+    socket.on('join_room', (data) => {
         if (inRoom()) {
             leaveRooms();
         }
-        if (roomId.length == 5 && roomId in games) {
+        const { roomId, name } = data;
+        // Test if roomId and name are provided
+        if (roomId && typeof name === 'string' && name.length > 0 && name.length < 20 && roomId.length == 5 && roomId in games) {
+            // Test if there is already a player with the same name in the room
+            const game = games[roomId];
+            if (game.players.some(player => player.name === name)) {
+                socket.emit('join_room_failed', 'name_taken');
+                return;
+            }
             socket.join(roomId);
             socket.emit('room_joined', roomId);
-            games[roomId].join(socket.id);
+            games[roomId].join(socket.id, name);
             broadcastGameState();
             broadcastPlayersUpdated(roomId);
         }
     });
-    socket.on('create_room', () => {
+    socket.on('create_room', (name: string) => {
         if (inRoom()) {
             leaveRooms();
         }
@@ -136,12 +149,16 @@ io.on('connection', (socket) => {
         if (roomId in games) {
             return;
         }
-        games[roomId] = new GameStateManager();
-        games[roomId].join(socket.id);
-        console.log('creating room', roomId);
-        socket.join(roomId);
-        socket.emit('room_joined', roomId);
-        broadcastPlayersUpdated(roomId);
+        // Test if name is valid
+        if (name && name.length > 0 && name.length < 20) {
+            games[roomId] = new GameStateManager();
+            games[roomId].join(socket.id, name);
+            console.log('creating room', roomId);
+            socket.join(roomId);
+            socket.emit('room_joined', roomId);
+            broadcastGameState();
+            broadcastPlayersUpdated(roomId);
+        }
     });
     socket.on('leave_room', () => {
         if (inRoom()) {
@@ -160,7 +177,7 @@ io.on('connection', (socket) => {
             console.log('start game');
             game?.play();
             broadcastGameState();
-            const sockets = game?.players;
+            const sockets = game?.sockets;
             const playingState = game?.gameState;
             if (playingState instanceof GameStatePlaying) {
                 sockets.forEach(socketId => {
@@ -173,7 +190,9 @@ io.on('connection', (socket) => {
                     // Key is the player's socket id, value is the number of cards in their hand
                     const playersHand: { [key: string]: number } = {};
                     result.forEach(hand => {
-                        playersHand[hand.player] = hand.cards.length;
+                        // Get player name
+                        const name = game?.getName(hand.player);
+                        playersHand[name] = hand.cards.length;
                     });
                     socket.emit('players_hand_count_changed', playersHand);
                 });
