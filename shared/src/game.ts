@@ -61,9 +61,7 @@ export class GameStatePlaying extends GameState {
         if (this.currentPlayer === player) {
             this.endTurn(true);
         }
-        if (this.manager.players.length === 1) {
-            this.win(null);
-        }
+        this.testWin();
     }
 
     private init() {
@@ -150,7 +148,7 @@ export class GameStatePlaying extends GameState {
             this.win(this.currentPlayer);
         }
         if (this.manager.players.length === 1) {
-            this.win(this.manager.players[1]);
+            this.win(this.manager.players[0]);
         }
         if (this.manager.players.length === 0) {
             this.win(null);

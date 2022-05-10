@@ -6,10 +6,16 @@
     "server",
     "shared"
   ],
+  "private": true,
   "scripts": {
     "build:shared": "cd shared && yarn build",
     "build:client": "yarn build:shared && cd client && yarn build",
-    "build:server": "yarn build:shared && cd server && yarn build"
+    "build:server": "yarn build:shared && cd server && yarn build",
+    "build": "yarn build:client && yarn build:server",
+    "start:client": "yarn build:client && cd client && yarn && yarn start --force",
+    "start:server": "yarn build:server && cd server && yarn && yarn start",
+    "dev:client": "yarn build:shared && cd client && yarn && yarn dev",
+    "dev:server": "yarn build:shared && cd server && yarn && yarn dev"
   },
   "devDependencies": {
     "typescript": "^4.6.4"

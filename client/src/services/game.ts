@@ -1,7 +1,16 @@
-import { Card } from '../../../shared';
+import { Card } from '@eleven/shared';
 import { Socket } from "socket.io-client";
 
 class GameSerivce {
+    public joinRoom(socket: Socket, roomId: string): void {
+        socket.emit("join_room", roomId);
+    }
+    public leaveRoom(socket: Socket): void {
+        socket.emit("leave_room");
+    }
+    public createRoom(socket: Socket): void {
+        socket.emit("create_room");
+    }
     public startGame(socket: Socket) {
         console.log("emit start game");
         socket.emit("start_game", {});

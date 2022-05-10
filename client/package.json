@@ -8,12 +8,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@eleven/shared": "workspace:^",
     "@mantine/core": "^4.2.4",
     "@mantine/form": "^4.2.4",
     "@mantine/hooks": "^4.2.4",
+    "@mantine/labs": "^4.2.4",
     "@mantine/modals": "^4.2.4",
     "@mantine/notifications": "^4.2.4",
     "@mantine/spotlight": "^4.2.4",
+    "material-symbols": "^0.1.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "socket.io-client": "^4.5.0"

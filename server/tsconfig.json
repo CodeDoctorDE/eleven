@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "target": "es6",
     "noImplicitAny": true,
+    "composite": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
@@ -14,11 +15,6 @@
       ]
     }
   },
-  "references": [
-    {
-      "path": "../shared"
-    }
-  ],
   "include": [
     "src/**/*"
   ]

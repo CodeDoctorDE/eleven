@@ -3,7 +3,7 @@ const app = express();
 import http from 'http';
 const server = http.createServer(app);
 import { Server } from "socket.io";
-import { Card, GameStateManager, GameStateWaiting, GameStatePlaying, GameStateEnded } from '../../shared';
+import { Card, GameStateManager, GameStateWaiting, GameStatePlaying, GameStateEnded } from '@eleven/shared';
 const io = new Server(server, {
     cors: {
         origin: '*',
@@ -14,38 +14,60 @@ app.get('/', (req, res) => {
     res.send('Eleven server is running!');
 });
 
-const gameStateManager = new GameStateManager();
 
+const games: { [key: string]: GameStateManager } = {};
+
+function getLastValue(set: Set<string>): string {
+    let value;
+    for (value of set);
+    return value;
+}
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+
+    const getRoom = (): string => {
+        // Get room of current player
+        return getLastValue(socket.rooms);
+    }
+    const getGame = (): GameStateManager | undefined => {
+        const room = getRoom();
+        if (room in games) {
+            return games[room];
+        }
+        return undefined;
+    }
     const broadcastGameState = () => {
-        console.log('broadcasting game state', gameStateManager.gameState.stateName);
-        io.emit('game_state_changed', gameStateManager.gameState.stateName);
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        console.log('broadcasting game state', game?.gameState.stateName);
+        io.emit('game_state_changed', game?.gameState.stateName);
+        const state = game?.gameState;
         if (state instanceof GameStateEnded) {
             io.emit('winner', state.winner);
         }
     }
 
     const broadcastCollectionChanged = () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             io.emit('collection_changed', state.collection);
         }
     }
 
     const broadcastCurrentPlayer = () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             io.emit('current_player_changed', state.currentPlayer);
         }
     }
 
     const sendOthersPlayersHandCount = () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
-            const players = gameStateManager.players;
+            const players = game?.players;
             players.forEach(socketId => {
                 const current = io.sockets.sockets.get(socketId);
                 const result = state.hands.filter(hand => hand.player !== socketId);
@@ -60,7 +82,8 @@ io.on('connection', (socket) => {
     }
 
     const sendCurrentHand = () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             const hand = state.getHand(socket.id);
             if (hand) {
@@ -76,25 +99,69 @@ io.on('connection', (socket) => {
             io.emit('current_card_played', card);
         }
     }
-    const state = gameStateManager.gameState;
-    console.log(state);
-    console.log(state instanceof GameStateWaiting);
-    if (state instanceof GameStateWaiting) {
-        state.join(socket.id);
-        broadcastGameState();
-    } else {
-        socket.disconnect();
+    const inRoom = (): boolean => {
+        return socket.rooms.size > 1;
+    }
+    const leaveRooms = () => {
+        socket.rooms.forEach(room => {
+            if (room !== socket.id) {
+                broadcastPlayersUpdated(room);
+                socket.leave(room);
+            }
+        });
+    }
+    const broadcastPlayersUpdated = async (room: string) => {
+        const sockets = io.sockets.adapter.rooms.get(room);
+        io.to(room).emit('players_updated', Array.from(sockets.values()));
     }
 
-    socket.on('start_game', () => {
-        console.log('start game?');
-        const state = gameStateManager.gameState;
-        if (!(state instanceof GameStatePlaying) && gameStateManager.players.length > 1) {
-            console.log('start game');
-            gameStateManager.play();
+    socket.on('join_room', (roomId: string) => {
+        if (inRoom()) {
+            leaveRooms();
+        }
+        if (roomId.length == 5 && roomId in games) {
+            socket.join(roomId);
+            socket.emit('room_joined', roomId);
+            games[roomId].join(socket.id);
             broadcastGameState();
-            const sockets = gameStateManager.players;
-            const playingState = gameStateManager.gameState;
+            broadcastPlayersUpdated(roomId);
+        }
+    });
+    socket.on('create_room', () => {
+        if (inRoom()) {
+            leaveRooms();
+        }
+        // Create a random room id made of 5 random characters (A-Z, 0-9)
+        const roomId = Math.random().toString(36).substring(2, 7);
+        if (roomId in games) {
+            return;
+        }
+        games[roomId] = new GameStateManager();
+        games[roomId].join(socket.id);
+        console.log('creating room', roomId);
+        socket.join(roomId);
+        socket.emit('room_joined', roomId);
+        broadcastPlayersUpdated(roomId);
+    });
+    socket.on('leave_room', () => {
+        if (inRoom()) {
+            leaveRooms();
+        }
+        socket.emit('room_joined', undefined);
+    });
+
+
+
+    socket.on('start_game', () => {
+        const game = getGame();
+        const state = game?.gameState;
+        console.log('start game?', state);
+        if (!(state instanceof GameStatePlaying) && game?.players.length > 1) {
+            console.log('start game');
+            game?.play();
+            broadcastGameState();
+            const sockets = game?.players;
+            const playingState = game?.gameState;
             if (playingState instanceof GameStatePlaying) {
                 sockets.forEach(socketId => {
                     console.log(socketId);
@@ -116,7 +183,8 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('take_card', () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id && !state.hasPlayed) {
                 const card = state.takeCardFromDeck();
@@ -131,7 +199,8 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('end_turn', () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id) {
                 state.endTurn();
@@ -140,7 +209,8 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('can_play', (data) => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id) {
                 console.log('can play?', data, state.canPlay(data));
@@ -149,7 +219,8 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('play_card', (cardIndex: number) => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id) {
                 const hand = state.getHand();
@@ -169,7 +240,8 @@ io.on('connection', (socket) => {
         }
     })
     socket.on('remove_last_card', () => {
-        const state = gameStateManager.gameState;
+        const game = getGame();
+        const state = game?.gameState;
         if (state instanceof GameStatePlaying) {
             if (state.currentPlayer === socket.id) {
                 console.log('remove last card');
@@ -186,12 +258,10 @@ io.on('connection', (socket) => {
     })
 
     socket.on('disconnect', () => {
+        const game = getGame();
         console.log('user disconnected');
-        gameStateManager.leave(socket.id);
-        if (gameStateManager.players.length === 0) {
-            gameStateManager.gameState = new GameStateWaiting(gameStateManager);
-            broadcastGameState();
-        }
+        game?.leave(socket.id);
+        broadcastGameState();
     });
 
 });

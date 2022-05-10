@@ -1,26 +1,43 @@
 import { useEffect, useState } from 'react'
 import logo from './logo.svg'
 import './App.css'
+import 'material-symbols/rounded.css';
 import socketService from './services/socket';
 import gameService from './services/game';
 import GameContext, { IGameContextProps } from './context';
-import { Card, CardCollection, PlayerHand, StateNames } from '../../shared';
+import { Card, CardCollection, PlayerHand, StateNames } from '@eleven/shared';
 import WaitingPage from './views/waiting';
 import PlayingPage from './views/playing';
 import FinishedPage from './views/finished';
 import socket from './services/socket';
+import RoomPage from './views/room';
+import { useHotkeys, useLocalStorage } from '@mantine/hooks';
+import { ColorScheme, ColorSchemeProvider, MantineProvider } from '@mantine/core';
+import { ModalsProvider } from '@mantine/modals';
 
-const endpoint = import.meta.env.API_ENDPOINT ??'eleven-backend.linwood.dev';
+const endpoint = import.meta.env.VITE_API_ENDPOINT ?? 'eleven-backend.linwood.dev';
 
 function App() {
+  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
+    key: 'mantine-color-scheme',
+    defaultValue: 'dark',
+    getInitialValueInEffect: true,
+  });
+  const toggleColorScheme = (value?: ColorScheme) =>
+    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+
+  useHotkeys([['mod+J', () => toggleColorScheme()]]);
+
   const [gameState, setGameState] = useState<StateNames | undefined>();
   const [collection, setCollection] = useState<CardCollection | undefined>();
   const [deckEmpty, setDeckEmpty] = useState(false);
   const [hand, setHand] = useState<Card[] | undefined>();
   const [winner, setWinner] = useState<string | undefined>();
   const [currentPlayer, setCurrentPlayer] = useState<string | undefined>();
+  const [players, setPlayers] = useState<string[]>([]);
   const [playersHandCount, setPlayersHandCount] = useState<{ [key: string]: number }>({});
   const [currentCardPlayed, setCurrentCardPlayed] = useState<Card | undefined>();
+  const [room, setRoom] = useState<string | undefined>();
   const connect = async () => {
     console.log(`connecting to ${endpoint}`);
     const connected = socketService.connect(endpoint);
@@ -63,6 +80,14 @@ function App() {
       console.log('disconnected');
       setGameState(undefined);
     });
+    socketService.socket?.on('room_joined', (data) => {
+      console.log('room joined', data);
+      setRoom(data);
+    });
+    socketService.socket?.on('players_updated', (data) => {
+      console.log('players updated', data);
+      setPlayers(data);
+    })
     console.log(`connected: ${await connected}`);
   }
   useEffect(() => {
@@ -79,6 +104,8 @@ function App() {
     currentPlayer,
     playersHandCount,
     currentCardPlayed,
+    room,
+    players,
     me: socketService?.socket?.id,
     canPlay: async (card: Card) => {
       if (socketService.socket)
@@ -109,16 +136,40 @@ function App() {
       if (socketService.socket)
         return gameService.removeLastCard(socketService.socket);
       return false;
+    },
+    joinRoom: async (room: string) => {
+      if (socketService.socket)
+        return gameService.joinRoom(socketService.socket, room);
+      return false;
+    },
+    leaveRoom: async () => {
+      if (socketService.socket)
+        return gameService.leaveRoom(socketService.socket);
+      setRoom(undefined);
+      return false;
+    },
+    createRoom: async () => {
+      if (socketService.socket)
+        return gameService.createRoom(socketService.socket);
+      return false;
     }
-
   }
 
   return (
-    <GameContext.Provider value={gameContextValue}>
-      {gameState === 'waiting' && <WaitingPage />}
-      {gameState === 'playing' && <PlayingPage />}
-      {gameState === 'end' && <FinishedPage />}
-    </GameContext.Provider>
+    <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+      <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
+        <ModalsProvider>
+          <GameContext.Provider value={gameContextValue}>
+            {room && <>
+              {gameState === 'waiting' && <WaitingPage />}
+              {gameState === 'playing' && <PlayingPage />}
+              {gameState === 'end' && <FinishedPage />}
+            </>}
+            {!room && <RoomPage />}
+          </GameContext.Provider>
+        </ModalsProvider>
+      </MantineProvider>
+    </ColorSchemeProvider>
   );
 }
 

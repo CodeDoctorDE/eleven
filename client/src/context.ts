@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardCollection, GameState, PlayerHand, StateNames } from './../../shared';
+import { Card, CardCollection, GameState, PlayerHand, StateNames } from '@eleven/shared';
 
 export interface IGameContextProps {
     currentPlayer: string | undefined;
@@ -10,7 +10,9 @@ export interface IGameContextProps {
     winner: string | undefined;
     // Key is player name, value is player hand count
     playersHandCount: { [key: string]: number };
+    players: string[];
     currentCardPlayed: Card | undefined;
+    room: string | undefined;
     canPlay(card: Card): Promise<boolean>;
     playCard(cardIndex: number): void;
     endTurn(): void;
@@ -18,6 +20,9 @@ export interface IGameContextProps {
     startGame(): void;
     me: string | undefined;
     removeLastCard(): void;
+    joinRoom(roomId: string): void;
+    createRoom(): void;
+    leaveRoom(): void;
 }
 
 const defaultState: IGameContextProps = {
@@ -30,12 +35,17 @@ const defaultState: IGameContextProps = {
     me: undefined,
     playersHandCount: {},
     currentCardPlayed: undefined,
+    room: undefined,
+    players: [],
     canPlay: () => Promise.resolve(false),
     playCard: () => { },
     endTurn: () => { },
     takeCard: () => { },
     startGame: () => { },
-    removeLastCard: () => { }
+    removeLastCard: () => { },
+    joinRoom: () => { },
+    createRoom: () => { },
+    leaveRoom: () => { }
 };
 
 export default React.createContext(defaultState);

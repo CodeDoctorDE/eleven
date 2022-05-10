@@ -1,24 +1,26 @@
 import React, { useContext } from 'react'
 import gameContext from '../../context'
-import { Card } from '../../../../shared';
+import { Card } from '@eleven/shared';
 import { Button } from '@mantine/core';
 import { getColor } from '../../asset';
+import CardsView from '../../components/cards';
 
 type Props = {}
 export default function HandView({ }: Props) {
     const context = useContext(gameContext)
-    const play = async (index: number, card: Card) => {
+    const hand = context.hand;
+    const play = async (card: Card) => {
         console.log('play', card);
-        if (await context.canPlay(card))
+        const index = hand?.indexOf(card);
+        if (await context.canPlay(card) && index)
             context.playCard(index);
         else
             console.log("cannnot play this card");
     }
-    const hand = context.hand;
     return (
         <div>
             <p>Your hand</p>
-            <ul>{hand?.map((value, index) => <li style={{ color: getColor(value.color), fontWeight: (context.currentCardPlayed?.number === value.number && context.currentCardPlayed?.color === value.color) ? 'bold' : 'normal' }} key={`${value.color}-${value.number}`} onClick={() => play(index, value)}>{value.number}</li>)}</ul>
+            <CardsView selected={context.currentCardPlayed} cards={hand ?? []} onClick={play} />
             <Button onClick={() => context.takeCard()}>Take card {context.deckEmpty}</Button>
             <Button onClick={() => context.endTurn()}>End turn</Button>
             {/* <Button onClick={() => context.removeLastCard()}>Remove last card (CHEAT)</Button> */}

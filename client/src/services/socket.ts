@@ -17,11 +17,10 @@ export class SocketService {
     public disconnect() {
         if (this.socket) {
             this.socket.disconnect();
-            this.socket = null;
         }
     }
     public isConnected() : boolean {
-        return this.socket !== null;
+        return this.socket?.connected ?? false;
     }
 }
 

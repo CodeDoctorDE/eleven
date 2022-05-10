@@ -489,15 +489,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./client/",\
           "packageDependencies": [\
             ["@eleven/client", "workspace:client"],\
+            ["@eleven/shared", "workspace:shared"],\
             ["@mantine/core", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@mantine/form", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@mantine/hooks", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
+            ["@mantine/labs", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@mantine/modals", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@mantine/notifications", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@mantine/spotlight", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
             ["@types/react", "npm:18.0.9"],\
             ["@types/react-dom", "npm:18.0.3"],\
             ["@vitejs/plugin-react", "npm:1.3.2"],\
+            ["material-symbols", "npm:0.1.0"],\
             ["react", "npm:18.1.0"],\
             ["react-dom", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:18.1.0"],\
             ["socket.io-client", "npm:4.5.0"],\
@@ -522,6 +525,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./server/",\
           "packageDependencies": [\
             ["@eleven/server", "workspace:server"],\
+            ["@eleven/shared", "workspace:shared"],\
             ["@types/express", "npm:4.17.13"],\
             ["@types/node", "npm:17.0.31"],\
             ["express", "npm:4.18.1"],\
@@ -809,6 +813,40 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],\
           "packagePeers": [\
             "@types/react",\
+            "react"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@mantine/labs", [\
+        ["npm:4.2.4", {\
+          "packageLocation": "./.yarn/cache/@mantine-labs-npm-4.2.4-9d15b5a740-e2631e5d0c.zip/node_modules/@mantine/labs/",\
+          "packageDependencies": [\
+            ["@mantine/labs", "npm:4.2.4"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4", {\
+          "packageLocation": "./.yarn/__virtual__/@mantine-labs-virtual-14ecc78dc7/0/cache/@mantine-labs-npm-4.2.4-9d15b5a740-e2631e5d0c.zip/node_modules/@mantine/labs/",\
+          "packageDependencies": [\
+            ["@mantine/labs", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
+            ["@mantine/core", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
+            ["@mantine/hooks", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:4.2.4"],\
+            ["@types/mantine__core", null],\
+            ["@types/mantine__hooks", null],\
+            ["@types/react", "npm:18.0.9"],\
+            ["@types/react-dom", "npm:18.0.3"],\
+            ["react", "npm:18.1.0"],\
+            ["react-dom", "virtual:623a85c2e8a0c12a310577c1415a873679aa2ac6e16d3d0f8fe9267fbd7eec7fba981b7b1252636d86a5696ce8bba0781505f3354b576ab6cad854b1838377e2#npm:18.1.0"]\
+          ],\
+          "packagePeers": [\
+            "@mantine/core",\
+            "@mantine/hooks",\
+            "@types/mantine__core",\
+            "@types/mantine__hooks",\
+            "@types/react-dom",\
+            "@types/react",\
+            "react-dom",\
             "react"\
           ],\
           "linkType": "HARD"\
@@ -3451,6 +3489,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["promise-retry", "npm:2.0.1"],\
             ["socks-proxy-agent", "npm:6.2.0"],\
             ["ssri", "npm:9.0.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["material-symbols", [\
+        ["npm:0.1.0", {\
+          "packageLocation": "./.yarn/cache/material-symbols-npm-0.1.0-e38e6ce458-8473e4f3ab.zip/node_modules/material-symbols/",\
+          "packageDependencies": [\
+            ["material-symbols", "npm:0.1.0"]\
           ],\
           "linkType": "HARD"\
         }]\
